@@ -1,7 +1,7 @@
 log/*.log
 db/*.sqlite3
 *.zip
-#*.class
+*.class
 FitNesseRoot/RecentChanges
 FitNesseRoot/ErrorLogs
 FitNesseRoot/files/testResults

@@ -15,7 +15,7 @@ current_test_step = null;
 finishingTestSteps = null;
 loadjQuery = function() {
 	// TODO: Load a spinner.
-	loadjQuery.getScript("/files/javascript/jquery-1.4.4.min.js");
+	loadjQuery.getScript("/files/mastiffe/javascript/jquery-1.4.4.min.js");
 	loadjQuery.tryReady(0); // Wait until jQuery loads before using it.
 }
 
@@ -43,7 +43,7 @@ loadjQuery.tryReady = function(time_elapsed) {
 		css.attr({
 		      rel:  "stylesheet",
 		      type: "text/css",
-		      href: "/files/css/jquery-ui-1.8.10.custom.css"
+		      href: "/files/mastiffe/css/jquery-ui-1.8.10.custom.css"
 		      });
 
 		// Init some global arrays.
@@ -70,7 +70,7 @@ loadjQuery.tryReady = function(time_elapsed) {
 		$.ajax({
 		    cache: true,
 		    dataType: "script",
-		    url: "/files/javascript/jquery-ui-1.8.10.custom.min.js",
+		    url: "/files/mastiffe/javascript/jquery-ui-1.8.10.custom.min.js",
 		    success: function(){ setTimeout("initDialog()",200); }
 		});
 	}
@@ -474,5 +474,5 @@ if(document.URL.search(/\?test$/) >= 0) {
   testForManual();
 } else if(document.URL.search(/\?edit$/) >= 0) {
   // Insert manual testing helper buttons.
-  loadjQuery.getScript("/files/javascript/mastiffe_buttons.js"); 
+  loadjQuery.getScript("/files/mastiffe/javascript/mastiffe_buttons.js"); 
 }

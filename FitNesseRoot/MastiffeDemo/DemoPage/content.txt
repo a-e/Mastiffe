@@ -8,7 +8,7 @@
 | Click ${failbutton} | the step fails | |
 | This is a really long test step.  I wonder how it will wrap, or if it will wrap at all, or if it will simply create a really wide dialog? | The text wraps | |
 |!- Look at <img src="/files/images/FitNesseLogo.gif" /> -!|!- The FitNesse logo appears. -!| |
-| Click on http://www.profitstreams.com/ | The link works.  After clicking on it the <a href="www.profitstreams.com">ProfitStreams page</a> appears. But this HTML still looks like HTML. | |
+| Click on http://www.automation-excellence.com/ | The link works.  After clicking on it the <a href="www.automation-excellence.com">Automation Excellence page</a> appears. But this HTML still looks like HTML. | |
 | Call HelperTests.GoogleFor | | |
 | Call .MastiffeDemo.HelperTests.GoogleFor | | searchengine:Yahoo! |
 |!- This|step|is|escaped -!| the step is pipe-delimited |!-Like|this|text|is.-!|

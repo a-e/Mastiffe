@@ -8,7 +8,7 @@ if(document.all) {
 
 loadjQuery = function() {
   // TODO: Load a spinner.
-  loadjQuery.getScript("/files/javascript/jquery-1.4.4.min.js");
+  loadjQuery.getScript("/files/mastiffe/javascript/jquery-1.4.4.min.js");
   loadjQuery.tryReady(0); // Wait until jQuery loads before using it.
 }
 
@@ -37,7 +37,7 @@ loadjQuery.tryReady = function(time_elapsed) {
     css.attr({
           rel:  "stylesheet",
           type: "text/css",
-          href: "/files/css/jquery-ui-1.8.10.custom.css"
+          href: "/files/mastiffe/css/jquery-ui-1.8.10.custom.css"
           });
 
     $("head").append("<link>");
@@ -45,13 +45,13 @@ loadjQuery.tryReady = function(time_elapsed) {
     css.attr({
           rel:  "stylesheet",
           type: "text/css",
-          href: "/files/css/jquery.wysiwyg.css"
+          href: "/files/mastiffe/css/jquery.wysiwyg.css"
           });
 
     $.ajax({
         cache: true,
         dataType: "script",
-        url: "/files/javascript/jquery-ui-1.8.10.custom.min.js",
+        url: "/files/mastiffe/javascript/jquery-ui-1.8.10.custom.min.js",
         success: function(){ loadwysiwyg(); }
     });
   }
@@ -61,7 +61,7 @@ function loadwysiwyg() {
   $.ajax({
       cache: true,
       dataType: "script",
-      url: "/files/javascript/jquery.wysiwyg.js",
+      url: "/files/mastiffe/javascript/jquery.wysiwyg.js",
       success: function(){ setTimeout("programButtons()",200); }
   });
 }
@@ -94,12 +94,12 @@ function programButtons() { // Now that jQuery UI is loaded...
   $.ajax({
       cache: true,
       dataType: "script",
-      url: "/files/javascript/wysiwyg.link.js",
+      url: "/files/mastiffe/javascript/wysiwyg.link.js",
   });
   $.ajax({
       cache: true,
       dataType: "script",
-      url: "/files/javascript/wysiwyg.table.js",
+      url: "/files/mastiffe/javascript/wysiwyg.table.js",
   });
   // Finish loading
   // Add the dialogs.

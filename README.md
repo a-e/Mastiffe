@@ -10,13 +10,13 @@ The files required for Mastiffe appear in this repository as they would from the
 1. Set up FitNesse by executing the jarfile (available from http://fitnesse.org/) once, in your chosen installation directory.
 2. In the same directory, run:
 
-        $ git clone git@github.com:a-e/mastiffe.git
+        $ git clone git@github.com:ken-g6/mastiffe.git
 
 3. If no plugins.properties file existed in your install, just rename readme.plugins.properties.txt to plugsins.properties.  Otherwise you will need to merge the new file into the old file.  If two plugins both work on HtmlPageFactory, well, you will need to combine their source codes somehow.
 4. Ensure RubySlim is installed on the server, so that FitNesse can access it.  Mastiffe is mostly Javascript, but depends on a tiny RubySlim backend.
 5. Finally, run the FitNesse server like this:
 
-        $ java -cp plugin/mastiffe.jar:fitnesse.jar fitnesseMain.FitNesseMain -p 8080
+        $ java -cp mastiffe/mastiffe.jar:fitnesse.jar fitnesseMain.FitNesseMain -p 8080
 
 And visit http://localhost:8080/ in your browser.
 

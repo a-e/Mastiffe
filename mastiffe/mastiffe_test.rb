@@ -2,7 +2,7 @@
 require 'json'
 require 'fileutils'
 
-module Rubyfix
+module Mastiffe
   class MastiffeTest
     @@keynumber = nil
 
