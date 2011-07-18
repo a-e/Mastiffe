@@ -1,0 +1,8 @@
+!contents
+
+!define searchterms {Automation Excellence}
+!define searchengine {Google}
+
+|table:mastiffe test|
+|Browse to the ${searchengine} homepage|The ${searchengine} homepage appears| |
+|Search ${searchengine} for ${searchterms}|The page for ${searchterms} is found successfully| |

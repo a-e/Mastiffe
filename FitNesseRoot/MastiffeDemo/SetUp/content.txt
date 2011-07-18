@@ -1,0 +1,9 @@
+This page includes initialization steps that will run before any Test or Suite in the RubyManual hierarchy.
+
+Import the fixture (MastiffeTest module, defined in the rubyfix directory):
+
+!| import |
+| rubyfix |
+
+| script | mastiffe test |
+| Show | mastiffe tag |

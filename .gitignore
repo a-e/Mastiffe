@@ -1,0 +1,9 @@
+log/*.log
+db/*.sqlite3
+*.zip
+#*.class
+FitNesseRoot/RecentChanges
+FitNesseRoot/ErrorLogs
+FitNesseRoot/files/testResults
+*~
+.*.swp

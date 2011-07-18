@@ -1,0 +1,5 @@
+!define TEST_SYSTEM {slim}
+!define TEST_RUNNER {rubyslim}
+!define COMMAND_PATTERN {rubyslim}
+
+!contents -R2 -g -p -f -h
