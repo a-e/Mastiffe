@@ -51,7 +51,7 @@
 				self: Wysiwyg.dom.getElement("a"), // link to element node
 				href: "http://",
 				title: "",
-				target: ""
+				target: "_blank"
 			};
 
 			if (a.self) {
