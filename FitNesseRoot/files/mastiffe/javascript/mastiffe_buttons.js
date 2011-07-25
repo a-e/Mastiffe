@@ -66,7 +66,8 @@ function loadwysiwyg() {
   });
 }
 
-html_regex = /<[a-z]+[ >]|\|/i;
+html_regex = /<[a-z]+[ >]|\||&(#[0-9]+|[a-z]+);/i;
+html_only_regex = /<[a-z]+[ >]|\|/i;
 // HTML-ify an argument, mainly escaping stuff.
 function doescape(original) {
   original = original.replace(/&/g, '&amp;'); // First, of course.
@@ -78,12 +79,9 @@ function doescape(original) {
 function unhtmlify(original) {
   original = original.trim();
   var testversion = original.replace(/^ *<p>/i, '').replace(/<\/p> *$/i, '');
-  if(!html_regex.test(testversion)) {
-    var testversion2 = testversion.replace(/&quot;/g, '"');
-    testversion2 = testversion2.replace(/&lt;/g, '<');
-    testversion2 = testversion2.replace(/&gt;/g, '>');
-    testversion2 = testversion2.replace(/&amp;/g, '&'); // Last, of course.
-    if(!/&(#[0-9]+|[a-z]+);/.test(testversion2)) return testversion;
+  if(!html_only_regex.test(testversion)) {
+    testversion = dounescape(testversion);
+    if(!html_regex.test(testversion)) return testversion;
   }
   return original;
 }
@@ -92,6 +90,7 @@ function dounescape(original) {
   var testversion2 = original.replace(/&quot;/g, '"');
   testversion2 = testversion2.replace(/&lt;/g, '<');
   testversion2 = testversion2.replace(/&gt;/g, '>');
+  testversion2 = testversion2.replace(/&nbsp;/g, ' ');
   testversion2 = testversion2.replace(/&amp;/g, '&'); // Last, of course.
   return testversion2;
 }
@@ -155,10 +154,10 @@ buttons: {
     '</div>')
     .dialog({
 autoOpen: false,
-title: 'Bad Step',
+title: 'Add Step',
 width: 800,
 height:710,
-modal: true,
+modal: false,
 resizable: false,
 open:  function(event, ui) {
 $('#dialog-add-step-action').wysiwyg({
@@ -252,9 +251,9 @@ function addMastiffeStep() {
   document.getElementById('dialog-add-step-action').value = '';
   document.getElementById('dialog-add-step-expected').value = '';
   document.getElementById('dialog-add-step-example').value = '';
-  if(typeof dialog_set_action == "undefined") dialog_set_action = '';
-  if(typeof dialog_set_expected == "undefined") dialog_set_expected = '';
-  if(typeof dialog_set_example == "undefined") dialog_set_example = '';
+  dialog_set_action = '';
+  dialog_set_expected = '';
+  dialog_set_example = '';
   add_step_dialog.dialog("option", "title", mastiffe_img+'Add Step');
   dialog_set_row = -1;
   add_step_dialog.dialog('open');
@@ -277,6 +276,7 @@ function editMastiffeStep() {
   var TA=document.getElementById('pageContentId');
   var row = getInputCursorLine(TA);
   var line=TA.value.split(LINE_SPLIT_CHARS)[row];
+  //alert("Got row number "+row+" which is\n"+line);
   line = splitThisStep(line);
   // Store which line to overwrite!
   dialog_set_row = row;
@@ -418,39 +418,33 @@ function doAddStep(row, step_entries) {
 match_a_call_line = /^\| *[Cc]all +(\.?[A-Z][a-z0-9]+(?:[A-Z][a-z0-9]*)+(?:\.[A-Z][a-z0-9]+(?:[A-Z][a-z0-9]*)+)*) *\| *\|[^|]*\| *$/;
 
 // Find the line the cursor is on in a textarea.
-// From http://stackoverflow.com/questions/3053542/how-to-get-the-start-and-end-points-of-selection-in-text-area/3053640#3053640
+// Based upon:
+//  http://stackoverflow.com/questions/263743/how-to-get-cursor-position-in-textarea
+//  http://stackoverflow.com/questions/3053542/how-to-get-the-start-and-end-points-of-selection-in-text-area/3053640#3053640
 function getInputCursorLine(el) {
-  var start = 0, normalizedValue, range,
-      textInputRange, len, endRange;
+  var start = 0;
 
-  normalizedValue = el.value.replace(/\r\n/g, "\n");
   if (typeof el.selectionStart == "number" && typeof el.selectionEnd == "number") {
+    var normalizedValue = el.value.replace(/\r\n/g, "\n");
     start = el.selectionStart;
+    start = normalizedValue.slice(0, start);
   } else {
-    range = document.selection.createRange();
+    el.focus(); 
 
-    if (range && range.parentElement() == el) {
-      len = el.value.length;
+    var r = document.selection.createRange(); 
+    if (r == null) { 
+      return 0; 
+    } 
 
-      // Create a working TextRange that lives only in the input
-      textInputRange = el.createTextRange();
-      textInputRange.moveToBookmark(range.getBookmark());
+    var re = el.createTextRange(), 
+        rc = re.duplicate(); 
+    re.moveToBookmark(r.getBookmark()); 
+    rc.setEndPoint('EndToStart', re); 
 
-      // Check if the start and end of the selection are at the very end
-      // of the input, since moveStart/moveEnd doesn't return what we want
-      // in those cases
-      endRange = el.createTextRange();
-      endRange.collapse(false);
-
-      if (textInputRange.compareEndPoints("StartToEnd", endRange) > -1) {
-        start = len;
-      } else {
-        start = -textInputRange.moveStart("character", -len);
-      }
-    }
+    start = rc.text;
   }
 
-  return(normalizedValue.slice(0, start).split("\n").length - 1);
+  return(start.split("\n").length - 1);
 }
 
 // Check any Mastiffe table within #pageContentId
