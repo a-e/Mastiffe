@@ -67,19 +67,34 @@ function loadwysiwyg() {
 }
 
 html_regex = /<[a-z]+[ >]|\|/i;
+// HTML-ify an argument, mainly escaping stuff.
+function doescape(original) {
+  original = original.replace(/&/g, '&amp;'); // First, of course.
+  original = original.replace(/</g, '&lt;');
+  original = original.replace(/>/g, '&gt;');
+  return original;
+}
 // un-HTML-ify an argument, if it has only unnecessary HTML.
 function unhtmlify(original) {
+  original = original.trim();
   var testversion = original.replace(/^ *<p>/i, '').replace(/<\/p> *$/i, '');
   if(!html_regex.test(testversion)) {
-    testversion = testversion.replace(/&quot;/g, '"');
-    testversion = testversion.replace(/&lt;/g, '<');
-    testversion = testversion.replace(/&gt;/g, '>');
-    testversion = testversion.replace(/&amp;/g, '&'); // Last, of course.
-    if(!/&(#[0-9]+|[a-z]+);/.test(testversion)) return testversion;
+    var testversion2 = testversion.replace(/&quot;/g, '"');
+    testversion2 = testversion2.replace(/&lt;/g, '<');
+    testversion2 = testversion2.replace(/&gt;/g, '>');
+    testversion2 = testversion2.replace(/&amp;/g, '&'); // Last, of course.
+    if(!/&(#[0-9]+|[a-z]+);/.test(testversion2)) return testversion;
   }
   return original;
 }
 
+function dounescape(original) {
+  var testversion2 = original.replace(/&quot;/g, '"');
+  testversion2 = testversion2.replace(/&lt;/g, '<');
+  testversion2 = testversion2.replace(/&gt;/g, '>');
+  testversion2 = testversion2.replace(/&amp;/g, '&'); // Last, of course.
+  return testversion2;
+}
 
 var MSTATE = {
     BEFORE : 0,
@@ -89,6 +104,13 @@ var MSTATE = {
 issues_dialog = null;
 add_step_dialog = null;
 add_param_dialog = null;
+
+// These three vars hold what text the Add Step dialog should start out with.
+dialog_set_row = -1;
+dialog_set_action = null;
+dialog_set_expected = null;
+dialog_set_example = null;
+
 function programButtons() { // Now that jQuery UI is loaded...
   // Load other bits of wysiwyg.
   $.ajax({
@@ -133,7 +155,7 @@ buttons: {
     '</div>')
     .dialog({
 autoOpen: false,
-title: mastiffe_img+'Add Step',
+title: 'Bad Step',
 width: 800,
 height:710,
 modal: true,
@@ -154,65 +176,21 @@ initialContent: "",
 controls: { insertImage: { visible: false } },
 formWidth: 660
   });
-  $('#dialog-add-step-action').wysiwyg('clear');
-  $('#dialog-add-step-expected').wysiwyg('clear');
-  $('#dialog-add-step-example').wysiwyg('clear');
+  if(typeof dialog_set_action == "undefined") dialog_set_action = '';
+  if(typeof dialog_set_expected == "undefined") dialog_set_expected = '';
+  if(typeof dialog_set_example == "undefined") dialog_set_example = '';
+  $('#dialog-add-step-action').wysiwyg('setContent', dialog_set_action);
+  $('#dialog-add-step-expected').wysiwyg('setContent', dialog_set_expected);
+  $('#dialog-add-step-example').wysiwyg('setContent', dialog_set_example);
  },
 buttons: {
-    Add: function() {
+    Save: function() {
         $( this ).dialog( "close" );
-        // Get the entries.
-        var txtAction = document.getElementById('dialog-add-step-action').value;
-        var txtExpected = document.getElementById('dialog-add-step-expected').value;
-        var txtExample = document.getElementById('dialog-add-step-example').value;
-
-        // Remove HTML from the values if at all possible.
-        txtAction = unhtmlify(txtAction);
-        txtExpected = unhtmlify(txtExpected);
-        txtExample = unhtmlify(txtExample);
-
-        // Escape entries that need it.
-        if(html_regex.test(txtAction)) txtAction = '!- '+txtAction+' -!';
-        else txtAction = ' '+txtAction+' ';
-        if(html_regex.test(txtExpected)) txtExpected = '!- '+txtExpected+' -!';
-        else txtExpected = ' '+txtExpected+' ';
-        if(html_regex.test(txtExample)) txtExample = '!- '+txtExample+' -!';
-        else txtExample = ' '+txtExample+' ';
-
-
-        // Find the end of the Mastiffe table.
-        var TA=document.getElementById('pageContentId').value;
-        var lines=TA.split(LINE_SPLIT_CHARS);
-        var line_status = MSTATE.BEFORE;
-
-        var lastline;
-        for(var line in lines) {
-          lastline = line;
-          if(line >= 0) line = lines[line];
-          if(line_status == MSTATE.BEFORE && /^\| *table: *Mastiffe test *\| *$/i.test(line)) {
-            line_status = MSTATE.WITHIN;
-          } else {
-            if(line_status == MSTATE.WITHIN && line.substr(0,1) != '|') {
-              line_status = MSTATE.AFTER;
-              break;
-            }
-          }
-        }
-        if(line_status == MSTATE.BEFORE) {
-          // Append the start of a new Mastiffe table if none was found.
-          lines.push('| table:Mastiffe test |');
-          lines.push('| Test step | Expected result | Example data |');
-        }
-        // Set up the final text line.
-        txtAction = '|'+txtAction+'|'+txtExpected+'|'+txtExample+'|';
-
-        // If a Mastiffe table was found, and its end was found too, insert the line at the end.
-        if(line_status == MSTATE.AFTER) {
-          lines.splice(lastline, 0, txtAction);
-        } else {
-          lines.push(txtAction);
-        }
-        document.getElementById('pageContentId').value = lines.join(LINE_SPLIT_CHARS);
+        doAddStep(dialog_set_row, [
+            document.getElementById('dialog-add-step-action').value,
+            document.getElementById('dialog-add-step-expected').value,
+            document.getElementById('dialog-add-step-example').value
+            ]);
       },
     Cancel: function() {
         $( this ).dialog( "close" );
@@ -232,7 +210,7 @@ title: mastiffe_img+'Add Parameter',
 width: 500,
 modal: true,
 buttons: {
-    Add: function() {
+    Save: function() {
         doAddMastiffeParam();
       },
     Cancel: function() {
@@ -268,11 +246,17 @@ buttons: {
   }
 }
 
+// *** Button Launchers ***
 // Display the dialog to add a Mastiffe step.
 function addMastiffeStep() {
   document.getElementById('dialog-add-step-action').value = '';
   document.getElementById('dialog-add-step-expected').value = '';
   document.getElementById('dialog-add-step-example').value = '';
+  if(typeof dialog_set_action == "undefined") dialog_set_action = '';
+  if(typeof dialog_set_expected == "undefined") dialog_set_expected = '';
+  if(typeof dialog_set_example == "undefined") dialog_set_example = '';
+  add_step_dialog.dialog("option", "title", mastiffe_img+'Add Step');
+  dialog_set_row = -1;
   add_step_dialog.dialog('open');
 }
 
@@ -282,6 +266,33 @@ function addMastiffeParam() {
   add_param_dialog.dialog('open');
 }
 
+// Display the dialog to edit a Mastiffe step.
+function editMastiffeStep() {
+  document.getElementById('dialog-add-step-action').value = '';
+  document.getElementById('dialog-add-step-expected').value = '';
+  document.getElementById('dialog-add-step-example').value = '';
+  add_step_dialog.dialog("option", "title", mastiffe_img+'Edit Step');
+
+  // Get the row the cursor is on.
+  var TA=document.getElementById('pageContentId');
+  var row = getInputCursorLine(TA);
+  var line=TA.value.split(LINE_SPLIT_CHARS)[row];
+  line = splitThisStep(line);
+  // Store which line to overwrite!
+  dialog_set_row = row;
+  if(line.thisStep.length == 2) {
+    line.thisStep.push('');
+    line.escapedCell.push(false);
+  }
+  // Note that this fails if there are less than three cells.  This kind of makes sense.
+  dialog_set_action = line.escapedCell[0]?line.thisStep[0]:doescape(line.thisStep[0]);
+  dialog_set_expected = line.escapedCell[1]?line.thisStep[1]:doescape(line.thisStep[1]);
+  dialog_set_example = line.escapedCell[2]?line.thisStep[2]:doescape(line.thisStep[2]);
+  add_step_dialog.dialog('open');
+}
+
+// *** Dialog Action Implementations ***
+// (functions extracted from dialog functions, so more than one thing can call them.)
 function doAddMastiffeParam() {
   // Get the entries.
   var txtName = jQuery.trim($('#dialog_param_name').val());
@@ -300,8 +311,8 @@ function doAddMastiffeParam() {
   }
 
   // Check the existing rows to find where to insert this.
-  var TA=document.getElementById('pageContentId').value;
-  var lines=TA.split(LINE_SPLIT_CHARS);
+  var TA=document.getElementById('pageContentId');
+  var lines=TA.value.split(LINE_SPLIT_CHARS);
   var line_status = MSTATE.BEFORE;
   var line;
 
@@ -340,11 +351,107 @@ function doAddMastiffeParam() {
   // Set up the final text line.
   txtValue = '!define '+txtName+' {'+txtValue+'}';
   lines.splice(line, 0, txtValue);
-  document.getElementById('pageContentId').value = lines.join(LINE_SPLIT_CHARS);
+  TA.value = lines.join(LINE_SPLIT_CHARS);
   add_param_dialog.dialog('close');
 }
 
+// Add a step from the add/edit dialog.
+function doAddStep(row, step_entries) {
+  // Get the entries.
+  var txtAction = step_entries[0];
+  var txtExpected = step_entries[1];
+  var txtExample = step_entries[2];
+
+  // Remove HTML from the values if at all possible.
+  txtAction = unhtmlify(txtAction);
+  txtExpected = unhtmlify(txtExpected);
+  txtExample = unhtmlify(txtExample);
+
+  // Escape entries that need it.
+  if(html_regex.test(txtAction)) txtAction = '!- '+txtAction+' -!';
+  else txtAction = ' '+dounescape(txtAction)+' ';
+  if(html_regex.test(txtExpected)) txtExpected = '!- '+txtExpected+' -!';
+  else txtExpected = ' '+dounescape(txtExpected)+' ';
+  if(html_regex.test(txtExample)) txtExample = '!- '+txtExample+' -!';
+  else txtExample = ' '+dounescape(txtExample)+' ';
+
+  // Read the existing text.
+  var TA=document.getElementById('pageContentId');
+  var lines=TA.value.split(LINE_SPLIT_CHARS);
+
+  var replace_line = (row>=0)?1:0;
+  if(row < 0) {
+    // Find the end of the Mastiffe table.
+    var line_status = MSTATE.BEFORE;
+    for(var line in lines) {
+      row = line;
+      if(line >= 0) line = lines[line];
+      if(line_status == MSTATE.BEFORE && /^\| *table: *Mastiffe test *\| *$/i.test(line)) {
+        line_status = MSTATE.WITHIN;
+      } else {
+        if(line_status == MSTATE.WITHIN && line.substr(0,1) != '|') {
+          line_status = MSTATE.AFTER;
+          break;
+        }
+      }
+    }
+    if(line_status == MSTATE.BEFORE) {
+      // Append the start of a new Mastiffe table if none was found.
+      lines.push('| table:Mastiffe test |');
+      lines.push('| Test step | Expected result | Example data |');
+      row = -1;
+    }
+  }
+
+  // Set up the final text line.
+  txtAction = '|'+txtAction+'|'+txtExpected+'|'+txtExample+'|';
+
+  // If a Mastiffe table was found, and its end was found too, insert the line at the end.
+  if(row >= 0) {
+    lines.splice(row, replace_line, txtAction);
+  } else {
+    lines.push(txtAction);
+  }
+  TA.value = lines.join(LINE_SPLIT_CHARS);
+}
+// *** Other Functions ***
 match_a_call_line = /^\| *[Cc]all +(\.?[A-Z][a-z0-9]+(?:[A-Z][a-z0-9]*)+(?:\.[A-Z][a-z0-9]+(?:[A-Z][a-z0-9]*)+)*) *\| *\|[^|]*\| *$/;
+
+// Find the line the cursor is on in a textarea.
+// From http://stackoverflow.com/questions/3053542/how-to-get-the-start-and-end-points-of-selection-in-text-area/3053640#3053640
+function getInputCursorLine(el) {
+  var start = 0, normalizedValue, range,
+      textInputRange, len, endRange;
+
+  normalizedValue = el.value.replace(/\r\n/g, "\n");
+  if (typeof el.selectionStart == "number" && typeof el.selectionEnd == "number") {
+    start = el.selectionStart;
+  } else {
+    range = document.selection.createRange();
+
+    if (range && range.parentElement() == el) {
+      len = el.value.length;
+
+      // Create a working TextRange that lives only in the input
+      textInputRange = el.createTextRange();
+      textInputRange.moveToBookmark(range.getBookmark());
+
+      // Check if the start and end of the selection are at the very end
+      // of the input, since moveStart/moveEnd doesn't return what we want
+      // in those cases
+      endRange = el.createTextRange();
+      endRange.collapse(false);
+
+      if (textInputRange.compareEndPoints("StartToEnd", endRange) > -1) {
+        start = len;
+      } else {
+        start = -textInputRange.moveStart("character", -len);
+      }
+    }
+  }
+
+  return(normalizedValue.slice(0, start).split("\n").length - 1);
+}
 
 // Check any Mastiffe table within #pageContentId
 function checkMastiffe() {
@@ -441,6 +548,7 @@ function initButtons() {
   // Syntax Check button, replaced by form submit check.
   //newhtml += '<button type="button" id="butVerify" onclick="checkMastiffe();">Syntax Check</button>';
   newhtml += '<button type="button" id="butAddManuStep" onclick="addMastiffeStep();">Add Step</button>';
+  newhtml += '<button type="button" id="butEditManuStep" onclick="editMastiffeStep();">Edit Step</button>';
   newhtml += '<button type="button" id="butAddParam" onclick="addMastiffeParam();">Add Parameter</button>';
   // End buttons.
   newhtml += '</div>';
