@@ -528,6 +528,14 @@ function checkMastiffe() {
 
 
 function initButtons() {
+  // Look for the form to add above.
+  var divMainForm = document.getElementsByTagName('FORM');
+  if(divMainForm.length == 0) {
+    setTimeout("initButtons()", 200); // set a timer to check again in 200 ms.
+    return;
+  }
+  divMainForm = divMainForm[0];
+
   // Add the buttons as the first child of div.main, before the form inside it.
   // No jQuery allowed here.
   var divButtons = document.createElement("DIV");
@@ -549,7 +557,6 @@ function initButtons() {
   divButtons.innerHTML = newhtml;
   divButtons.style.display = "none";
 
-  var divMainForm = document.getElementsByTagName('FORM')[0];
   divMainForm.parentNode.insertBefore(divButtons,divMainForm);
   //document.getElementById("butVerify").disabled = true;
   document.getElementById("butAddManuStep").disabled = true;
