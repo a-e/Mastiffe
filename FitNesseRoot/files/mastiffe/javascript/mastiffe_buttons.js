@@ -477,9 +477,7 @@ function checkMastiffe() {
       }
       var errorThisLine = false;
       // Remove any escaped entries
-      var cleanline = line.replace(/\|!-.*?-!\|/g,'||');
-      // Remove escaped entries next to other escaped entries.
-      cleanline = cleanline.replace(/\|!-.*?-!\|/g,'||');
+      var cleanline = line.replace(/!-.*?-!/g,'');
       // Look for unescaped HTML.
       if(/<(?:[bh]r ?\/?|p ?\/?|\/[a-z]+)>/i.test(cleanline)) {
         if(!errorThisLine) txtErrors += 'At: '+line+'\n';
@@ -493,9 +491,10 @@ function checkMastiffe() {
         if(!errorThisLine) txtErrors += 'At: '+line+'\n';
         errorThisLine = true;
         txtErrors += '  Error: Mastiffe lines must have three cells each.\n';
-        if(/^\|[^|]*\|[^|]*\|[^|]*\|[^|]*\|/.test(cleanline))
+        if(/^\|[^|]*\|[^|]*\|[^|]*\|[^|]*\|/.test(cleanline)) {
           txtErrors += '         (Did you forget to escape a pipe?)\n';
           txtErrors += '  Unescaped entries: '+cleanline+'\n';
+        }
         continue;
       }
 
