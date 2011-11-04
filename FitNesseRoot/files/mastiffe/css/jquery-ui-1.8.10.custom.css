@@ -374,3 +374,10 @@ button.ui-button::-moz-focus-inner { border: 0; padding: 0; } /* reset extra pad
 /* Mastiffe */
 table.mastiffe { width:100%; border:none; background:transparent; }
 table.mastiffe td { border:none; background-color:transparent; padding:1px; }
+
+#dialog-step a:link, #dialog-expected a:link, #dialog-example a:link {
+    color: #2E2EB2;
+}
+#dialog-step a:active, #dialog-expected a:active, #dialog-example a:active {
+    color: #FF8000;
+}
