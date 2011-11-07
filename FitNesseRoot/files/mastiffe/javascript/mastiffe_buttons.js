@@ -330,6 +330,7 @@ function doAddMastiffeParam() {
         lines.splice(line, 0, '');
         lines.splice(line, 0, '');
         line--;
+        if(line < 0) line++;
         line_status = MSTATE.AFTER;
         break;
       }
