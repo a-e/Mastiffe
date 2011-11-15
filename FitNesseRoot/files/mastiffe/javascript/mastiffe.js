@@ -250,8 +250,10 @@ function tryCall(s, vars, fromurl) {
 		vars = vars.trim();
           
                 // Allow hash tables as parameters.
-                vars = vars.replace(/^!?{/,'');
-                vars = vars.replace(/}$/,'');
+                if(/^!?{.*}$/.test(vars)) {
+                	vars = vars.replace(/^!?{/,'');
+                	vars = vars.replace(/}$/,'');
+                }
 
 		// Make vars proper JSON.
 		if(vars == '') vars = '{}';
