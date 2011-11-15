@@ -480,7 +480,7 @@ function checkMastiffe() {
       // Remove any escaped entries
       var cleanline = line.replace(/!-.*?-!/g,'');
       // Look for unescaped HTML.
-      if(/<(?:[bh]r ?\/?|p ?\/?|\/[a-z]+)>/i.test(cleanline)) {
+      if(/<(?:[bh]r ?\/?|p ?\/?|img .*|\/[a-z]+)>/i.test(cleanline)) {
         if(!errorThisLine) txtErrors += 'At: '+line+'\n';
         errorThisLine = true;
         txtErrors += '  Warning: This line appears to have unescaped HTML.\n';

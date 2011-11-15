@@ -248,6 +248,10 @@ function tryCall(s, vars, fromurl) {
 		// Make sure vars is present, even if empty.
 		if(typeof vars == "undefined") vars = '';
 		vars = vars.trim();
+          
+                // Allow hash tables as parameters.
+                vars = vars.replace(/^!?{/,'');
+                vars = vars.replace(/}$/,'');
 
 		// Make vars proper JSON.
 		if(vars == '') vars = '{}';
