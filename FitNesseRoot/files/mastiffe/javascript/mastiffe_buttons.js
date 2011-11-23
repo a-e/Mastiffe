@@ -109,6 +109,9 @@ dialog_set_row = -1;
 dialog_set_action = null;
 dialog_set_expected = null;
 dialog_set_example = null;
+dialog_selection_start = 0;
+dialog_selection_end = 0;
+dialog_selection_text = null;
 
 function programButtons() { // Now that jQuery UI is loaded...
   // Load other bits of wysiwyg.
@@ -201,6 +204,7 @@ buttons: {
     .html('<table class="mastiffe" width="100%">' +
         '<tr><td>Name:</td><td width="100%"><input id="dialog_param_name" type="text" style="width:100%"/></td></tr>' +
         '<tr><td>Default<br>value:</td><td width="100%"><input id="dialog_param_value" type="text" style="width:100%"/></td></tr>' +
+        '<tr><td></td><td><input type=checkbox id="dialog_replace_all">Replace all</input></td></tr>' +
       '</table>' +
     '</div>')
     .dialog({
@@ -232,6 +236,7 @@ buttons: {
   document.getElementsByTagName('FORM')[0].onsubmit = checkMastiffe;
   // Un-grey out the buttons, 
   document.getElementById("butAddManuStep").disabled = false;
+  document.getElementById("butEditManuStep").disabled = false;
   document.getElementById("butAddParam").disabled = false;
   // If a Mastiffe table is present, show the buttons.
   var TA=document.getElementById('pageContentId').value;
@@ -261,7 +266,9 @@ function addMastiffeStep() {
 
 function addMastiffeParam() {
   document.getElementById('dialog_param_name').value = '';
-  document.getElementById('dialog_param_value').value = '';
+  document.getElementById('dialog_replace_all').checked = false;
+  getDialogSelection(document.getElementById('pageContentId'));
+  document.getElementById('dialog_param_value').value = dialog_selection_text;
   add_param_dialog.dialog('open');
 }
 
@@ -297,7 +304,8 @@ function doAddMastiffeParam() {
   // Get the entries.
   var txtName = jQuery.trim($('#dialog_param_name').val());
   var txtValue = $('#dialog_param_value').val();
-  if(/[   {}]/.test(txtName)) {
+  var replaceAll = document.getElementById('dialog_replace_all').checked;
+  if(/[ 	{}]/.test(txtName)) {
     alert('The parameter name may not contain spaces or {curly braces}.');
     return;
   }
@@ -312,9 +320,30 @@ function doAddMastiffeParam() {
 
   // Check the existing rows to find where to insert this.
   var TA=document.getElementById('pageContentId');
-  var lines=TA.value.split(LINE_SPLIT_CHARS);
+  var lines = null;
+
+  // Place the variable in the rest of the text, if appropriate.
+  if(replaceAll) {
+    // Regex escaping from http://simonwillison.net/2006/Jan/20/escape/#p-6
+    var re = new RegExp(txtValue.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&"), 'g');
+    var lines=TA.value.replace(re, "${"+txtName+"}");
+  } else {
+    // If there was selected text, replace it.
+    if(dialog_selection_end != dialog_selection_start && txtValue == dialog_selection_text) {
+      if(dialog_selection_end < dialog_selection_start) {
+        var temp = dialog_selection_end;
+        dialog_selection_end = dialog_selection_start;
+        dialog_selection_start = temp;
+      }
+      lines = TA.value.substring(0,dialog_selection_start) + "${"+txtName+"}" + TA.value.substring(dialog_selection_end);
+    } else {
+      lines = TA.value;
+    }
+  }
+  lines = lines.split(LINE_SPLIT_CHARS);
   var line_status = MSTATE.BEFORE;
   var line;
+  var minline = lines.length;
 
   for(line in lines) {
     var found_name;
@@ -325,6 +354,11 @@ function doAddMastiffeParam() {
         return;
       }
     }
+    // If the variable is found already used in another variable definition, be sure to define the variable before that use.
+    if(lines[line].indexOf("${"+txtName+"}") >= 0) {
+      minline = line;
+    }
+
     if(line_status == MSTATE.BEFORE) {
       if(/^\| *table: *Mastiffe test *\| *$/i.test(lines[line])) {
         lines.splice(line, 0, '');
@@ -351,6 +385,7 @@ function doAddMastiffeParam() {
   }
   // Set up the final text line.
   txtValue = '!define '+txtName+' {'+txtValue+'}';
+  if(minline < line) line = minline;
   lines.splice(line, 0, txtValue);
   TA.value = lines.join(LINE_SPLIT_CHARS);
   add_param_dialog.dialog('close');
@@ -446,6 +481,53 @@ function getInputCursorLine(el) {
   }
 
   return(start.split("\n").length - 1);
+}
+
+//  http://stackoverflow.com/questions/3053542/how-to-get-the-start-and-end-points-of-selection-in-text-area/3053640#3053640
+function getDialogSelection(el) {
+    var start = 0, end = 0, normalizedValue, range,
+        textInputRange, len, endRange;
+
+    if (typeof el.selectionStart == "number" && typeof el.selectionEnd == "number") {
+        start = el.selectionStart;
+        end = el.selectionEnd;
+    } else {
+        range = document.selection.createRange();
+
+        if (range && range.parentElement() == el) {
+            len = el.value.length;
+            normalizedValue = el.value.replace(/\r\n/g, "\n");
+
+            // Create a working TextRange that lives only in the input
+            textInputRange = el.createTextRange();
+            textInputRange.moveToBookmark(range.getBookmark());
+
+            // Check if the start and end of the selection are at the very end
+            // of the input, since moveStart/moveEnd doesn't return what we want
+            // in those cases
+            endRange = el.createTextRange();
+            endRange.collapse(false);
+
+            if (textInputRange.compareEndPoints("StartToEnd", endRange) > -1) {
+                start = end = len;
+            } else {
+                start = -textInputRange.moveStart("character", -len);
+                start += normalizedValue.slice(0, start).split("\n").length - 1;
+
+                if (textInputRange.compareEndPoints("EndToEnd", endRange) > -1) {
+                    end = len;
+                } else {
+                    end = -textInputRange.moveEnd("character", -len);
+                    end += normalizedValue.slice(0, end).split("\n").length - 1;
+                }
+            }
+        }
+    }
+
+    
+    dialog_selection_start = start;
+    dialog_selection_end = end;
+    dialog_selection_text = el.value.substring(start, end);
 }
 
 // Check any Mastiffe table within #pageContentId
@@ -551,7 +633,6 @@ function initButtons() {
   //newhtml += '<button type="button" id="butVerify" onclick="checkMastiffe();">Syntax Check</button>';
   newhtml += '<button type="button" id="butAddManuStep" onclick="addMastiffeStep();">Add Step</button>';
   newhtml += '<button type="button" id="butEditManuStep" onclick="editMastiffeStep();">Edit Step</button>';
-  newhtml += '<button type="button" id="butAddParam" onclick="addMastiffeParam();">Add Parameter</button>';
   // End buttons.
   newhtml += '</div>';
   divButtons.innerHTML = newhtml;
@@ -560,10 +641,27 @@ function initButtons() {
   divMainForm.parentNode.insertBefore(divButtons,divMainForm);
   //document.getElementById("butVerify").disabled = true;
   document.getElementById("butAddManuStep").disabled = true;
-  document.getElementById("butAddParam").disabled = true;
+  document.getElementById("butEditManuStep").disabled = true;
+
+  // Add another button at the bottom.
+  //newhtml += '<button type="button" id="butAddParam" onclick="addMastiffeParam();">Add Parameter</button>';
+  var butAddParam = document.createElement("BUTTON");
+  butAddParam.type = "button";
+  butAddParam.id = "butAddParam";
+  if( butAddParam.attachEvent ){
+    butAddParam.attachEvent('onclick', 'addMastiffeParam();');
+  } else {
+    butAddParam.setAttribute('onclick', 'addMastiffeParam();');
+  }
+  butAddParam.innerHTML = 'Add Parameter';
+  butAddParam.disabled = true;
+  divMainForm.getElementsByTagName("DIV")[0].appendChild(butAddParam);
+
+
   // Uncomment the following to
   // finally display the buttons' div.
   divButtons.style.display = "";
+  
 }
 initButtons();
 // Begin getting jQuery.
