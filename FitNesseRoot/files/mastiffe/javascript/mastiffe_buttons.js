@@ -645,15 +645,15 @@ function initButtons() {
 
   // Add another button at the bottom.
   //newhtml += '<button type="button" id="butAddParam" onclick="addMastiffeParam();">Add Parameter</button>';
-  var butAddParam = document.createElement("BUTTON");
+  var butAddParam = document.createElement("INPUT");
   butAddParam.type = "button";
   butAddParam.id = "butAddParam";
   if( butAddParam.attachEvent ){
-    butAddParam.attachEvent('onclick', 'addMastiffeParam();');
+    butAddParam.attachEvent('onclick', addMastiffeParam);
   } else {
     butAddParam.setAttribute('onclick', 'addMastiffeParam();');
   }
-  butAddParam.innerHTML = 'Add Parameter';
+  butAddParam.value = 'Add Parameter';
   butAddParam.disabled = true;
   divMainForm.getElementsByTagName("DIV")[0].appendChild(butAddParam);
 
