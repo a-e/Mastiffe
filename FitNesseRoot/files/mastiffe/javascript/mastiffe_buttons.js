@@ -612,7 +612,7 @@ function checkMastiffe() {
 function initButtons() {
   // Look for the form to add above.
   var divMainForm = document.getElementsByTagName('FORM');
-  if(divMainForm.length == 0) {
+  if(divMainForm.length == 0 || divMainForm[0].getElementsByTagName("DIV").length == 0) {
     setTimeout("initButtons()", 200); // set a timer to check again in 200 ms.
     return;
   }
