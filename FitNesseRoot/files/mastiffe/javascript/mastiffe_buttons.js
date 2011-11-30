@@ -551,15 +551,25 @@ function checkMastiffe() {
 
     // Hashtable validation.
     if(line.indexOf('!{') >= 0) {
-      var hashtables = line.split('!{');
-      for(var i=1; i < hashtables.length; i++) {
-        if(!/^[^:},]*:[^:},]*(,[^:},]*:[^:},]*)*\}/.test(hashtables[i])) {
+      var hashtableline = line;
+      // Get rid of all variables for this check.
+      while(/\$\{[^}]*\}/.test(hashtableline)) { hashtableline = hashtableline.replace(/\$\{[^}]*\}/g,''); }
+      while(hashtableline.indexOf('!{') >= 0) {
+        hashtables = hashtableline.split('!{');
+        var i = hashtables.length-1;
+        if(!/^[^{:},]*:[^{:},]*(,[^{:},]*:[^{:},]*)*\}/.test(hashtables[i])) {
           txtErrors += 'At: '+line+"\n  Error: Malformed hashtable found.  Hashtables must have at least one name-value pair separated by a ':'.  Name-value pairs must be separated by ','s.  And the hashtable must be terminated by a '}'.";
           if(line.substr(0,1) == '|') {
             txtErrors += "\n    You MAY NOT SAVE THE PAGE until this error is fixed!!!";
             dialog_fatal_page_error = true;
           }
         }
+        // If a hashtable is imbalanced, it's been reported, so just get out of here.
+        if(hashtables[i].indexOf('}') < 0) break;
+        // Remove the last hashtable without disturbing anything around it.
+        hashtables[i-1] += hashtables[i].substr(hashtables[i].indexOf('}')+1);
+        hashtables.pop();
+        hashtableline = hashtables.join('!{');
       }
     }
 
