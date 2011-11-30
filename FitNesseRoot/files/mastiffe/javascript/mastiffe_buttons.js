@@ -112,6 +112,7 @@ dialog_set_example = null;
 dialog_selection_start = 0;
 dialog_selection_end = 0;
 dialog_selection_text = null;
+dialog_fatal_page_error = false;
 
 function programButtons() { // Now that jQuery UI is loaded...
   // Load other bits of wysiwyg.
@@ -139,8 +140,12 @@ width: 700,
 modal: false,
 buttons: {
     "Save Anyway": function() {
-      $( this ).dialog( "close" );
-      document.getElementsByTagName('FORM')[0].submit();
+        if(dialog_fatal_page_error) {
+          alert("There is an error on this page that MUST be fixed before you can save it!");
+        } else {
+          $( this ).dialog( "close" );
+          document.getElementsByTagName('FORM')[0].submit();
+        }
       },
     Cancel: function() {
       $( this ).dialog( "close" );
@@ -538,8 +543,26 @@ function checkMastiffe() {
   var TA=document.getElementById('pageContentId').value;
   lines=TA.split(LINE_SPLIT_CHARS);
   var MastiffeState = MSTATE.BEFORE;
+
+  // Reset the ability to save the page even with errors.
+  dialog_fatal_page_error = false;
   for(var line in lines) {
     if(line >= 0) line = lines[line];
+
+    // Hashtable validation.
+    if(line.indexOf('!{') >= 0) {
+      var hashtables = line.split('!{');
+      for(var i=1; i < hashtables.length; i++) {
+        if(!/^[^:},]*:[^:},]*(,[^:},]*:[^:},]*)*\}/.test(hashtables[i])) {
+          txtErrors += 'At: '+line+"\n  Error: Malformed hashtable found.  Hashtables must have at least one name-value pair separated by a ':'.  Name-value pairs must be separated by ','s.  And the hashtable must be terminated by a '}'.";
+          if(line.substr(0,1) == '|') {
+            txtErrors += "\n    You MAY NOT SAVE THE PAGE until this error is fixed!!!";
+            dialog_fatal_page_error = true;
+          }
+        }
+      }
+    }
+
     if(MastiffeState != MSTATE.WITHIN) {
       if(/^\| *table: *Mastiffe test *\| *$/i.test(line)) {
         if(MastiffeState == MSTATE.BEFORE) {
