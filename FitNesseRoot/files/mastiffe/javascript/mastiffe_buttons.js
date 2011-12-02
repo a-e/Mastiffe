@@ -348,6 +348,7 @@ function doAddMastiffeParam() {
   lines = lines.split(LINE_SPLIT_CHARS);
   var line_status = MSTATE.BEFORE;
   var line;
+  var last_bang_line = 0;
   var minline = lines.length;
 
   for(line in lines) {
@@ -365,32 +366,28 @@ function doAddMastiffeParam() {
     }
 
     if(line_status == MSTATE.BEFORE) {
-      if(/^\| *table: *Mastiffe test *\| *$/i.test(lines[line])) {
-        lines.splice(line, 0, '');
-        lines.splice(line, 0, '');
-        line--;
-        if(line < 0) line++;
-        line_status = MSTATE.AFTER;
-        break;
+      // If no !defines are found, put this one before the first table, if any.
+      if(lines[line].substr(0,1) == '|' && last_bang_line == 0) {
+        last_bang_line = line;
       }
     } else {
+      // Do not put this !define before any other !defines
+      // (Unless any depend on it.)
       if(line_status == MSTATE.WITHIN && lines[line].substr(0,1) != '!') {
-        line_status = MSTATE.AFTER;
-        break;
+        last_bang_line = line;
+        line_status = MSTATE.BEFORE;
       }
     }
   }
 
-  if(line_status == MSTATE.BEFORE) {
-    // Append the start of a new Mastiffe table if none was found.
-    lines.push('');
-    lines.push('| table:Mastiffe test |');
-    lines.push('| Test step | Expected result | Example data |');
-    line = lines.length-3;
-  }
+  // Do not append the start of a new Mastiffe table if none was found.
   // Set up the final text line.
   txtValue = '!define '+txtName+' {'+txtValue+'}';
+
+  // Sort out where to place this line.
+  if(last_bang_line != 0) line = last_bang_line;
   if(minline < line) line = minline;
+
   lines.splice(line, 0, txtValue);
   TA.value = lines.join(LINE_SPLIT_CHARS);
   add_param_dialog.dialog('close');
@@ -557,8 +554,8 @@ function checkMastiffe() {
       while(hashtableline.indexOf('!{') >= 0) {
         hashtables = hashtableline.split('!{');
         var i = hashtables.length-1;
-        if(!/^[^{:},]*:[^{:},]*(,[^{:},]*:[^{:},]*)*\}/.test(hashtables[i])) {
-          txtErrors += 'At: '+line+"\n  Error: Malformed hashtable found.  Hashtables must have at least one name-value pair separated by a ':'.  Name-value pairs must be separated by ','s.  And the hashtable must be terminated by a '}'.";
+        if(!/^[^{:},]+:[^{:},]+(,[^{:},]+:[^{:},]+)*\}/.test(hashtables[i])) {
+            txtErrors += 'At: '+line+"\n  Error: Malformed hashtable found.  Hashtables must have at least one name-value pair separated by a ':'.  Name-value pairs must be separated by ','s.  Names and values must have at least one character.  And the hashtable must be terminated by a '}'.";
           if(line.substr(0,1) == '|') {
             txtErrors += "\n    You MAY NOT SAVE THE PAGE until this error is fixed!!!";
             dialog_fatal_page_error = true;
