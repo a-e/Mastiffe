@@ -303,6 +303,50 @@ function editMastiffeStep() {
   add_step_dialog.dialog('open');
 }
 
+// Parse Ruby Selenium RC code into Rsel.
+// At least partially.
+function parseRsel() {
+  var TA=document.getElementById('pageContentId');
+  var text = TA.value;
+
+  // Note: All commands initially start with rsel|, to differentiate them from any other tables.
+  // Fix first lines.
+  text = text.replace(/^ *@selenium\.open  *"([^"]*)" *$/m, "rsel| script | rsel addons | $1 | !{host:${HOST}, stop_on_failure:true} |\nrsel| Open browser |\nrsel| Maximize browser |");
+
+
+  // Delete begin-rescue-end blocks except for the asserted contents.
+  text = text.replace(/^ *begin *\n/gm, '');
+  text = text.replace(/^ *rescue Test::Unit::AssertionFailedError *\n.*\n *end *\n/gm, '');
+
+  text = text.replace(/^ *@selenium\.type  *"([^"]*)", *"([^"]*)" *$/gm, 'rsel| Type |!-$2-!| into field |!-$1-!|');
+  text = text.replace(/^ *@selenium\.select  *"([^"]*)", *"label=([^"]*)" *$/gm, 'rsel| Select |!-$2-!| from dropdown |!-$1-!|');
+  text = text.replace(/^ *@selenium\.wait_for_page_to_load  *"([0-9]+)000" *$/gm, 'rsel| Page loads in | $1 | seconds or less |');
+  text = text.replace(/^ *@selenium\.click  *"\/(.*)" *$/gm, 'rsel| Click |!-xpath=/$1-!|');
+  text = text.replace(/^ *@selenium\.click  *"(.*)" *$/gm, 'rsel| Click |!-$1-!|');
+  text = text.replace(/^ *assert @selenium.is_text_present\("(.*)"\) *$/gm, 'rsel| See |!-$1-!|');
+  text = text.replace(/^ *assert_equal "([^"]*)", *@selenium.get_([a-z]+)\("(.*)"\) *$/gm, 'rsel| Check | get $2 |!-$3-!|!-$1-!|');
+  text = text.replace(/^ *assert !([0-9]+).times{ break if \(@selenium.is_text_present\("(.*)"\) rescue false\); sleep 1 } *$/gm, 'rsel| See |!-$2-!| within | $1 | seconds |');
+
+  // Pick up most remaining one-argument Selenium commands.
+  text = text.replace(/^ *@selenium\.([a-z_]+)  *"\/\/([^"]*)" *$/gm, "rsel| $1 |!-xpath=//$2-!|");
+  text = text.replace(/^ *@selenium\.([a-z_]+)  *"([^"]*)" *$/gm, "rsel| $1 |!-$2-!|/");
+
+  // Fix any remaining Selenium commands with underscores to have spaces instead.
+  text = text.replace(/^(rsel\|[^|]*)_/gm, '$1 ');
+
+  // Fix any remaining Selenium commands with escaped quotes, but only on Rsel lines.
+  text = text.replace(/^(rsel\|.*)\\"/gm, "$1\"");
+
+  // Add closing line.
+  text = text.replace(/^  *end *$/m, 'rsel| Close browser |');
+  // Clean up rsel|.
+  text = text.replace(/^rsel\|/gm, '|');
+  TA.value = text;
+}
+
+
+
+
 // *** Dialog Action Implementations ***
 // (functions extracted from dialog functions, so more than one thing can call them.)
 function doAddMastiffeParam() {
@@ -452,6 +496,7 @@ function doAddStep(row, step_entries) {
   }
   TA.value = lines.join(LINE_SPLIT_CHARS);
 }
+
 // *** Other Functions ***
 match_a_call_line = /^\| *[Cc]all +(\.?[A-Z][a-z0-9]+(?:[A-Z][a-z0-9]*)+(?:\.[A-Z][a-z0-9]+(?:[A-Z][a-z0-9]*)+)*) *\| *\|[^|]*\| *$/;
 
@@ -687,6 +732,17 @@ function initButtons() {
   butAddParam.disabled = true;
   divMainForm.getElementsByTagName("DIV")[0].appendChild(butAddParam);
 
+  // And another for Rsel.
+  var butParseRsel = document.createElement("INPUT");
+  butParseRsel.type = "button";
+  butParseRsel.id = "butParseRsel";
+  if( butParseRsel.attachEvent ){
+    butParseRsel.attachEvent('onclick', parseRsel);
+  } else {
+    butParseRsel.setAttribute('onclick', 'parseRsel();');
+  }
+  butParseRsel.value = 'Ruby to Rsel';
+  divMainForm.getElementsByTagName("DIV")[0].appendChild(butParseRsel);
 
   // Uncomment the following to
   // finally display the buttons' div.
