@@ -311,12 +311,15 @@ function parseRsel() {
 
   // Note: All commands initially start with rsel|, to differentiate them from any other tables.
   // Fix first lines.
-  text = text.replace(/^ *@selenium\.open  *"([^"]*)" *$/m, "rsel| script | rsel addons | $1 | !{host:${HOST}, stop_on_failure:true} |\nrsel| Open browser |\nrsel| Maximize browser |");
+  text = text.replace(/^ *@selenium\.open  *"([^"]*)" *$/m, "rsel| script | Selenium test | $1 | !{host: ${HOST}, stop_on_failure:true} |\nrsel| Open browser |\nrsel| Maximize browser |");
 
+  // Other lines like that are Visit lines.
+  text = text.replace(/^ *@selenium\.open  *"([^"]*)" *$/gm, "rsel| Visit |!-$1-!|");
 
   // Delete begin-rescue-end blocks except for the asserted contents.
   text = text.replace(/^ *begin *\n/gm, '');
   text = text.replace(/^ *rescue Test::Unit::AssertionFailedError *\n.*\n *end *\n/gm, '');
+  text = text.replace(/def (setup|teardown)[\s\S]*?end/g, '');
 
   text = text.replace(/^ *@selenium\.type  *"([^"]*)", *"([^"]*)" *$/gm, 'rsel| Type |!-$2-!| into field |!-$1-!|');
   text = text.replace(/^ *@selenium\.select  *"([^"]*)", *"label=([^"]*)" *$/gm, 'rsel| Select |!-$2-!| from dropdown |!-$1-!|');
@@ -338,7 +341,7 @@ function parseRsel() {
   text = text.replace(/^(rsel\|.*)\\"/gm, "$1\"");
 
   // Add closing line.
-  text = text.replace(/^  *end *$/m, 'rsel| Close browser |');
+  text = text.replace(/^ *end *$/m, 'rsel| Close browser |');
   // Clean up rsel|.
   text = text.replace(/^rsel\|/gm, '|');
   TA.value = text;
@@ -595,7 +598,7 @@ function checkMastiffe() {
     if(line.indexOf('!{') >= 0) {
       var hashtableline = line;
       // Get rid of all variables for this check.
-      while(/\$\{[^}]*\}/.test(hashtableline)) { hashtableline = hashtableline.replace(/\$\{[^}]*\}/g,''); }
+      while(/\$\{[^}]*\}/.test(hashtableline)) { hashtableline = hashtableline.replace(/\$\{[^}]*\}/g,' '); }
       while(hashtableline.indexOf('!{') >= 0) {
         hashtables = hashtableline.split('!{');
         var i = hashtables.length-1;
