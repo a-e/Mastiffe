@@ -602,10 +602,10 @@ function checkMastiffe() {
       while(hashtableline.indexOf('!{') >= 0) {
         hashtables = hashtableline.split('!{');
         var i = hashtables.length-1;
-        if(!/^[^{:},]+:[^{:},]+(,[^{:},]+:[^{:},]+)*\}/.test(hashtables[i])) {
-            txtErrors += 'At: '+line+"\n  Error: Malformed hashtable found.  Hashtables must have at least one name-value pair separated by a ':'.  Name-value pairs must be separated by ','s.  Names and values must have at least one character.  And the hashtable must be terminated by a '}'.";
+        if(!/^[^{:},|]+:[^{:},|]+(,[^{:},|]+:[^{:},|]+)*\}/.test(hashtables[i])) {
+            txtErrors += 'At: '+line+"\n  Error: Malformed hashtable found.  Hashtables must have at least one name-value pair separated by a ':'.  Name-value pairs must be separated by ','s.  Names and values must have at least one character.  And the hashtable must be terminated by a '}'.\n";
           if(line.substr(0,1) == '|') {
-            txtErrors += "\n    You MAY NOT SAVE THE PAGE until this error is fixed!!!";
+            txtErrors += "    You MAY NOT SAVE THE PAGE until this error is fixed!!!\n";
             dialog_fatal_page_error = true;
           }
         }
@@ -745,6 +745,7 @@ function initButtons() {
     butParseRsel.setAttribute('onclick', 'parseRsel();');
   }
   butParseRsel.value = 'Ruby to Rsel';
+  divMainForm.getElementsByTagName("DIV")[0].appendChild(document.createTextNode(" "));
   divMainForm.getElementsByTagName("DIV")[0].appendChild(butParseRsel);
 
   // Uncomment the following to
