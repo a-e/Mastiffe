@@ -317,8 +317,8 @@ function parseRsel() {
   text = text.replace(/^ *@selenium\.open  *"([^"]*)" *$/gm, "rsel| Visit |!-$1-!|");
 
   // Delete begin-rescue-end blocks except for the asserted contents.
-  text = text.replace(/^ *begin *\n/gm, '');
-  text = text.replace(/^ *rescue Test::Unit::AssertionFailedError *\n.*\n *end *\n/gm, '');
+  text = text.replace(/^ *begin *\r?\n/gm, '');
+  text = text.replace(/^ *rescue Test::Unit::AssertionFailedError *\r?\n.*\r?\n *end *\r?\n/gm, '');
   text = text.replace(/def (setup|teardown)[\s\S]*?end/g, '');
 
   text = text.replace(/^ *@selenium\.type  *"([^"]*)", *"([^"]*)" *$/gm, 'rsel| Type |!-$2-!| into field |!-$1-!|');
