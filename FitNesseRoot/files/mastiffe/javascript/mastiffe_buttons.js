@@ -327,7 +327,10 @@ function parseRsel() {
   text = text.replace(/^ *@selenium\.click  *"\/(.*)" *$/gm, 'rsel| Click |!-xpath=/$1-!|');
   text = text.replace(/^ *@selenium\.click  *"(.*)" *$/gm, 'rsel| Click |!-$1-!|');
   text = text.replace(/^ *assert @selenium.is_text_present\("(.*)"\) *$/gm, 'rsel| See |!-$1-!|');
+  text = text.replace(/^ *@selenium.choose_([a-z]+)_on_next_confirmation *$/gm, 'rsel| Choose $1 on next confirmation |');
   text = text.replace(/^ *assert_equal "([^"]*)", *@selenium.get_([a-z]+)\("(.*)"\) *$/gm, 'rsel| Check | get $2 |!-$3-!|!-$1-!|');
+  text = text.replace(/^ *assert \/(.*)\/ *=~ *@selenium.get_([a-z]+)\("(.*)"\) *$/gm, 'rsel| Check | get $2 |!-$3-!|!-regex:$1-!|');
+  text = text.replace(/^ *assert \/(.*)\/ *=~ *@selenium.get_([a-z]+) *$/gm, 'rsel| Check | get $2 |!-regex:$1-!|');
   text = text.replace(/^ *assert !([0-9]+).times{ break if \(@selenium.is_text_present\("(.*)"\) rescue false\); sleep 1 } *$/gm, 'rsel| See |!-$2-!| within | $1 | seconds |');
 
   // Pick up most remaining one-argument Selenium commands.
