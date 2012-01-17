@@ -21,7 +21,7 @@ module Mastiffe
       filename = "FitNesseRoot/MastiffeResults/ResNo#{@@keynumber}/content.txt"
       sleepcount = 0;
       until(sleepcount > 3600 || File.exist?(filename))
-        Kernel.sleep 1 
+        Kernel.sleep 8 
         sleepcount += 1
       end
 

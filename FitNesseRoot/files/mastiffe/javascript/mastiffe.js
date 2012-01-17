@@ -149,8 +149,8 @@ function initDialog() {
 		       	}
 		});
 
-	// Set a local timeout.
-	setTimeout('timeOutTest()', 3500000);
+	// Set a local timeout.  Now 8 hours or so.
+	setTimeout('timeOutTest()', 28700000);
 	// Begin looking for timeouts.
 	setTimeout('testForTimeout()', 1000);
 	//$('body').append($dialog);
