@@ -99,7 +99,6 @@ function initDialog() {
 					} else {
 						current_test_step.push("pass:"+notes);
 					}
-					//$( this ).dialog( "close" );
 					displayNextStep();
 				},
 				"Pass All": function() {
@@ -112,6 +111,16 @@ function initDialog() {
 					}
 					$( this ).dialog( "close" );
 					finishTestSteps("pass", "passed");
+				},
+				Skip: function() {
+					var notes = $("#dialog-notes").val();
+
+					if(typeof notes == "undefined" || notes == "") {
+						current_test_step.push("ignore:skipped");
+					} else {
+						current_test_step.push("ignore:"+notes);
+					}
+					displayNextStep();
 				},
 				Blocked: function() {
 					var notes = $("#dialog-notes").val();
