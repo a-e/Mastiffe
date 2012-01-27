@@ -224,6 +224,7 @@ match_a_wikilink = /\.?[A-Z][a-z0-9]+(?:[A-Z][a-z0-9]*)+(?:\.[A-Z][a-z0-9]+(?:[A
 match_a_call = /^[Cc]all +(\.?[A-Z][a-z0-9]+(?:[A-Z][a-z0-9]*)+(?:\.[A-Z][a-z0-9]+(?:[A-Z][a-z0-9]*)+)*)/;
 // Replace all instances of ${xyz} where vars["xyz"] is defined, with vars["xyz"].
 function parseCell(s, vars, escaped, fromurl) {
+        if(s == undefined) return "";
 	s = s.replace(match_a_var, function(str, p1) {
 			p1 = p1.trim();
 			if(typeof vars[p1] == "undefined") return str;
