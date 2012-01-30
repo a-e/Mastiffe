@@ -498,9 +498,9 @@ function testForManual() {
     // Else give up searching.
   }
 }
-if(document.URL.search(/\?test$/) >= 0) {
+if(/\?test$/.test(document.URL)) {
   testForManual();
-} else if(document.URL.search(/\?edit$/) >= 0) {
+} else if(document.URL.indexOf('?') < 0 || /\?edit$/.test(document.URL)) {
   // Insert manual testing helper buttons.
   loadjQuery.getScript("/files/mastiffe/javascript/mastiffe_buttons.js"); 
 }

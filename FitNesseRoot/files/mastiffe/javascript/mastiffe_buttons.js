@@ -700,11 +700,14 @@ function checkMastiffe() {
 }
 
 
-function initButtons() {
+function initButtons(count) {
   // Look for the form to add above.
   var divMainForm = document.getElementsByTagName('FORM');
-  if(divMainForm.length == 0 || divMainForm[0].getElementsByTagName("DIV").length == 0) {
-    setTimeout("initButtons()", 200); // set a timer to check again in 200 ms.
+  // Wait up to 60 seconds for the page to load.  Longer if we're sure we're editing.
+  if((count < 300 || /\?edit$/.test(document.URL)) && (divMainForm.length == 0 || divMainForm[0].getElementsByTagName("DIV").length == 0)) {
+    // If this is a non-editing page, return.
+    if(document.getElementById("addChildPopup") != null) return;
+    setTimeout("initButtons("+(count+1)+")", 200); // set a timer to check again in 200 ms.
     return;
   }
   divMainForm = divMainForm[0];
@@ -765,8 +768,10 @@ function initButtons() {
   // finally display the buttons' div.
   divButtons.style.display = "";
   
+  // Begin getting jQuery if we didn't already.
+  if(!(/\?edit$/.test(document.URL))) loadjQuery();
 }
-initButtons();
-// Begin getting jQuery.
-loadjQuery();
+initButtons(0);
 
+// Begin getting jQuery if we know it's needed.
+if(/\?edit$/.test(document.URL)) loadjQuery();
