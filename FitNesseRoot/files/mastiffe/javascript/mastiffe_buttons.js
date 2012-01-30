@@ -622,7 +622,7 @@ function checkMastiffe() {
     }
 
     if(MastiffeState != MSTATE.WITHIN) {
-      if(/^\| *table: *Mastiffe test *\| *$/i.test(line)) {
+      if(/^\| *table: *Mastiffe ?test *\| *$/i.test(line)) {
         if(MastiffeState == MSTATE.BEFORE) {
           // Now we're in a Mastiffe table.
           MastiffeState = MSTATE.WITHIN;
@@ -640,6 +640,14 @@ function checkMastiffe() {
         continue;
       }
       var errorThisLine = false;
+
+      // Verify !--! are surrounded by |'s.
+      if(/[^|]!-/.test(line) || /-![^|]/.test(line)) {
+        if(!errorThisLine) txtErrors += 'At: '+line+'\n';
+        errorThisLine = true;
+        txtErrors += '  Error: Escape sequences (!--!) in Mastiffe tables must begin and end on cell boundaries.\n';
+      }
+
       // Remove any escaped entries
       var cleanline = line.replace(/!-.*?-!/g,'');
       // Look for unescaped HTML.
