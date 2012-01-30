@@ -78,6 +78,8 @@ function doescape(original) {
 // un-HTML-ify an argument, if it has only unnecessary HTML.
 function unhtmlify(original) {
   original = original.trim();
+  // Also remove any newlines, adding a space if there was none otherwise.
+  original = original.replace(/( (\r\n|\n|\r)+|(\r\n|\n|\r)+ |(\r\n|\n|\r)+)/gm," ");
   var testversion = original.replace(/^ *<p>/i, '').replace(/<\/p> *$/i, '');
   if(!html_only_regex.test(testversion)) {
     testversion = dounescape(testversion);
