@@ -13,19 +13,35 @@ testno = 0;
 testcases = null;
 current_test_step = null;
 finishingTestSteps = null;
+preprog_steps = null;
+preprog_results = null;
 loadjQuery = function() {
 	// TODO: Load a spinner.
 	loadjQuery.getScript("/files/mastiffe/javascript/jquery-1.4.4.min.js");
+        // Initialize some variables.
+        var ppstr = document.URL.indexOf("stepstatus=");
+        if(ppstr > 0) {
+          // Load the preprogrammed steps.
+          ppstr = document.URL.substring(ppstr+11);
+          preprog_steps = ppstr.split('');
+          preprog_results = new Array();
+          preprog_results['p'] = 'pass:passed';
+          preprog_results['s'] = 'ignore:skipped';
+          preprog_results['f'] = 'fail:failed';
+        } else {
+          preprog_steps = new Array();
+        }
+
 	loadjQuery.tryReady(0); // Wait until jQuery loads before using it.
 }
 
 // dynamically load any javascript file.
 loadjQuery.getScript = function(filename) {
-	var script = document.createElement('script')
-		script.setAttribute("type","text/javascript")
-		script.setAttribute("src", filename)
-		if (typeof script!="undefined")
-			document.getElementsByTagName("head")[0].appendChild(script)
+	var script = document.createElement('script');
+        script.setAttribute("type","text/javascript");
+        script.setAttribute("src", filename);
+        if (typeof script!="undefined")
+                document.getElementsByTagName("head")[0].appendChild(script)
 }
 loadjQuery.tryReady = function(time_elapsed) {
 	// Continually polls to see if jQuery is loaded.
@@ -33,7 +49,7 @@ loadjQuery.tryReady = function(time_elapsed) {
 		if (time_elapsed <= 5000) { // and we havn't given up trying...
 			setTimeout("loadjQuery.tryReady(" + (time_elapsed + 200) + ")", 200); // set a timer to check again in 200 ms.
 		} else {
-			alert("Timed out while loading jQuery.")
+			alert("Timed out while loading jQuery.");
 		}
 	} else {
 		// Any code to run after jQuery loads goes here!
@@ -179,7 +195,7 @@ function testForTimeout() {
 
 // Load the given page's text.
 function runTestOnPage(url, vars) {
-	var testurl = url.replace(/(\?test)?$/, "?edit");
+	var testurl = url.replace(/(\?test.*)?$/, "?edit");
 	$('#test-text-div').load(testurl+" #pageContentId", function() { parsePageContent(url, vars); } );
 }
 
@@ -352,9 +368,19 @@ function displayNextStep() {
 					find_manual_test.test(testcase.text[testcase.index-2]))
 				continue;
 
+			// Begin to produce the result.
 			thisStep[0] = parseCell(thisStep[0], testcase.vars, escapedCell[0], testcase.url);
-			// If a call is seen, this section will be returned to later.
+			// If a call is seen, this section will be returned to later, from a callback.
 			if(tryCall(thisStep[0], thisStep[2], testcase.url)) return;
+			
+                        // If this step was done before, and we're re-doing this test, do it the same way.
+                        if(preprog_steps.length > 0) {
+                                thisStep[1] = parseCell(thisStep[1], testcase.vars, escapedCell[1], testcase.url);
+                                jsonOut.push(new Array("report:"+thisStep[0], "report:"+thisStep[1], preprog_results[preprog_steps.shift()]));
+                                // Then continue to the next test step.
+                                testStepNo++;
+                                continue;
+                        }
 			$("#dialog-step").html(thisStep[0]);
 			if(thisStep.length > 0) {
 				thisStep[1] = parseCell(thisStep[1], testcase.vars, escapedCell[1], testcase.url);
@@ -446,6 +472,7 @@ pageContent: JSON.stringify(jsonOut)
 });
 	// Perform any cleanup work, like removing a spinner, here.
 	$dialog.dialog("close");
+        setTimeout(make_resume_button, 100);
 	if(testTimedOutLocal) alert("Test timed out! But partial results were saved.");
 }
 
@@ -481,8 +508,53 @@ function testForManual() {
     // Else give up searching.
   }
 }
-if(/\?test$/.test(document.URL)) {
+
+// On test result pages with failures, make a resume button.
+function make_resume_button() {
+  if(document.readyState != "complete") {
+    setTimeout(make_resume_button, 100);
+    return;
+  }
+  var passed_steps = document.getElementsByClassName("pass");
+  var test_table = null;
+  for(i=0; i < passed_steps.length; i++) {
+    if(/^ *table *: *mastiffe ?test *$/i.test(passed_steps[i].innerHTML)) {
+      test_table = passed_steps[i].parentNode.parentNode.parentNode.parentNode;
+    }
+  }
+  if(test_table == null) return false;
+
+  var firstfail = test_table.getElementsByClassName("fail");
+  if(firstfail.length == 0) {
+    firstfail = test_table.getElementsByClassName("error");
+    if(firstfail.length == 0) return false;
+  }
+  // Get the row of the first failure.
+  firstfail = firstfail[0].parentNode.parentNode;
+
+  // Search through the table for that first failure, recording passed and skipped steps.
+  var stepstatus = new Array();
+  for(i=2; i < test_table.rows.length; i++) {
+    if(test_table.rows[i] == firstfail) break;
+    stepstatus.push((test_table.rows[i].cells[2].innerHTML.indexOf('class="pass"')>0)?'p':'s');
+  }
+  stepstatus = stepstatus.join('');
+
+  //alert("We would call with "+stepstatus);
+  //Add a button to resume the test.
+  var testspan = document.getElementsByClassName("actions")[0];
+  var testlink = document.createElement("A");
+  var baseurl = document.URL;
+  baseurl = baseurl.substring(0,baseurl.indexOf('?'));
+  testlink.href = baseurl + "?test&stepstatus="+stepstatus;
+  testlink.innerHTML = "Resume Test&nbsp;";
+  testspan.appendChild(testlink);
+}
+
+if(/\?test/.test(document.URL)) {
   testForManual();
+} else if(/\?pageHistory&resultDate=/.test(document.URL)) {
+  make_resume_button();
 } else if(document.URL.indexOf('?') < 0 || /\?edit$/.test(document.URL)) {
   // Insert manual testing helper buttons.
   loadjQuery.getScript("/files/mastiffe/javascript/mastiffe_buttons.js"); 

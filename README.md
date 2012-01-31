@@ -28,13 +28,16 @@ And visit http://localhost:8080/ in your browser.
 Your first Mastiffe test run
 ----------------------------
 
-Visit http://localhost:8080/MastiffeDemo.DemoPage to see an example Mastiffe test.  This test demonstrates several Mastiffe capabilities, including parameters, embedding HTML in test steps, and calling other tests with parameters.  Click the Test link and a dialog will appear with the first test step.  The following options are available:
+Visit http://localhost:8080/MastiffeTemplate.DemoPage to see an example Mastiffe test.  This test demonstrates several Mastiffe capabilities, including parameters, embedding HTML in test steps, and calling other tests with parameters.  Click the Test link and a dialog will appear with the first test step.  The following options are available:
 
 * Pass: Pass this test step.  The next test step will then appear.
 * Pass All: Pass all remaining test steps and end the test.
+* Skip: Skip this test step, e.g. if it is conditional on something that did not happen.
 * Blocked: Something is blocking you from completing this test step.  Explain why in the Notes field.  This will skip all other test steps and end the test.
 * Fail: Fail this test step.  Explain why in the Notes field.  The next test step will then appear.
 * Abort: Abort this test run.  Equivalent to clicking the "X" to close the dialog.  The current step is marked as aborted, all other steps are skipped, and the test ends.
+
+If you abort the test or fail any step, a button labeled "Resume Test" will appear below the other buttons in the left column.  Clicking this button will reproduce the statuses (though not the messages) of the first passed and skipped steps, and resume testing at the failed step.
 
 Editing Mastiffe tests
 ----------------------
