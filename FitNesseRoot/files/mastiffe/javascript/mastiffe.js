@@ -41,7 +41,7 @@ loadjQuery.getScript = function(filename) {
         script.setAttribute("type","text/javascript");
         script.setAttribute("src", filename);
         if (typeof script!="undefined")
-                document.getElementsByTagName("head")[0].appendChild(script)
+                document.getElementsByTagName("head")[0].appendChild(script);
 }
 loadjQuery.tryReady = function(time_elapsed) {
 	// Continually polls to see if jQuery is loaded.
@@ -509,13 +509,27 @@ function testForManual() {
   }
 }
 
+function cstmGetElementsByClassName(source, class_name) {
+  var docList = source.getElementsByTagName('span');
+  var matchArray = new Array();
+
+  for (var i = 0; i < docList.length; i++) {
+    if (docList[i].className == class_name) {
+      matchArray.push(docList[i]);
+    }
+  }
+
+  return matchArray;
+}
+
+
 // On test result pages with failures, make a resume button.
 function make_resume_button() {
   if(document.readyState != "complete") {
     setTimeout(make_resume_button, 100);
     return;
   }
-  var passed_steps = document.getElementsByClassName("pass");
+  var passed_steps = cstmGetElementsByClassName(document, "pass");
   var test_table = null;
   for(i=0; i < passed_steps.length; i++) {
     if(/^ *table *: *mastiffe ?test *$/i.test(passed_steps[i].innerHTML)) {
@@ -524,9 +538,9 @@ function make_resume_button() {
   }
   if(test_table == null) return false;
 
-  var firstfail = test_table.getElementsByClassName("fail");
+  var firstfail = cstmGetElementsByClassName(test_table, "fail");
   if(firstfail.length == 0) {
-    firstfail = test_table.getElementsByClassName("error");
+    firstfail = cstmGetElementsByClassName(test_table, "error");
     if(firstfail.length == 0) return false;
   }
   // Get the row of the first failure.
@@ -536,13 +550,13 @@ function make_resume_button() {
   var stepstatus = new Array();
   for(i=2; i < test_table.rows.length; i++) {
     if(test_table.rows[i] == firstfail) break;
-    stepstatus.push((test_table.rows[i].cells[2].innerHTML.indexOf('class="pass"')>0)?'p':'s');
+    stepstatus.push(test_table.rows[i].cells[2].firstChild.className == "pass"?'p':'s');
   }
   stepstatus = stepstatus.join('');
 
   //alert("We would call with "+stepstatus);
   //Add a button to resume the test.
-  var testspan = document.getElementsByClassName("actions")[0];
+  var testspan = document.getElementsByTagName("DIV")[2];
   var testlink = document.createElement("A");
   var baseurl = document.URL;
   baseurl = baseurl.substring(0,baseurl.indexOf('?'));
