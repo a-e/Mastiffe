@@ -184,7 +184,7 @@ function runTestOnPage(url, vars) {
 }
 
 // Parse the text inside test-text-div.
-var find_manual_test = /^\| *table *: *[Mm]astiffe [Tt]est *\| *$/;
+var find_manual_test = /^\| *table *: *mastiffe ?test *\| *$/i;
 function parsePageContent(url, vars) {
 	// First, note that there is no pending test.
 	current_test_step = null;
@@ -415,26 +415,9 @@ function finishTestSteps(state, report) {
 			// Save the next step.
 			testcases.push(testcase);
 			// Split thisStep.
-			thisStep = thisStep.trim().substring(1, thisStep.length-1).split(/\|/);
-			// Fix escaped pipes.
-			var escapedCell = new Array();
-			for(var i=0; i < thisStep.length; i++) {
-				if(/^!-/.test(thisStep[i])) {
-					// Record that this cell was escaped.
-					escapedCell.push(true);
-					if(!/-!$/.test(thisStep[i])) {
-						while(i < thisStep.length-2 && !/-!$/.test(thisStep[i+1])) {
-							// Merge these two entries.
-							thisStep[i] += '|'+thisStep[i+1];
-							thisStep.splice(i+1,1);
-						}
-						// Merge these two entries.
-						thisStep[i] += '|'+thisStep[i+1];
-				thisStep.splice(i+1,1);
-					}
-					thisStep[i] = thisStep[i].substring(2, thisStep[i].length-2);
-				} else escapedCell.push(false); // Record that this cell wasn't escaped.
-			}
+			thisStep = splitThisStep(thisStep);
+                        escapedCell = thisStep.escapedCell;
+                        thisStep = thisStep.thisStep;
 
 			// Produce the result.
 			thisStep[0] = parseCell(thisStep[0], testcase.vars, escapedCell[0], testcase.url);
