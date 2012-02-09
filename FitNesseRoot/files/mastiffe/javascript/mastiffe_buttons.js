@@ -599,6 +599,13 @@ function checkMastiffe() {
   for(var line in lines) {
     if(line >= 0) line = lines[line];
 
+    // Generic table formatting check.
+    if(/^\|.*\|[^|]*[^\s|][^|]*$/.test(line)) {
+      if(!errorThisLine) txtErrors += 'At: '+line+'\n';
+      errorThisLine = true;
+      txtErrors += '  Warning: This looks like a table line with trailing characters.  It will cause any table around it not to appear or work as a table.\n';
+    }
+
     // Hashtable validation.
     if(line.indexOf('!{') >= 0) {
       var hashtableline = line;
@@ -608,7 +615,9 @@ function checkMastiffe() {
         hashtables = hashtableline.split('!{');
         var i = hashtables.length-1;
         if(!/^[^{:},|]+:[^{:},|]+(,[^{:},|]+:[^{:},|]+)*\}/.test(hashtables[i])) {
-            txtErrors += 'At: '+line+"\n  Error: Malformed hashtable found.  Hashtables must have at least one name-value pair separated by a ':'.  Name-value pairs must be separated by ','s.  Names and values must have at least one character.  And the hashtable must be terminated by a '}'.\n";
+          if(!errorThisLine) txtErrors += 'At: '+line+'\n';
+          errorThisLine = true;
+          txtErrors += "  Error: Malformed hashtable found.  Hashtables must have at least one name-value pair separated by a ':'.  Name-value pairs must be separated by ','s.  Names and values must have at least one character.  And the hashtable must be terminated by a '}'.\n";
           if(line.substr(0,1) == '|') {
             txtErrors += "    You MAY NOT SAVE THE PAGE until this error is fixed!!!\n";
             dialog_fatal_page_error = true;
@@ -631,7 +640,9 @@ function checkMastiffe() {
           continue;
         } else {
           // We found a second Mastiffe table!  Error!
-          txtErrors += 'At: '+line+'\n  Error: Only one Mastiffe table per page is functional.\n';
+          if(!errorThisLine) txtErrors += 'At: '+line+'\n';
+          errorThisLine = true;
+          txtErrors += '  Error: Only one Mastiffe table per page is functional.\n';
         }
       }
     } else {
