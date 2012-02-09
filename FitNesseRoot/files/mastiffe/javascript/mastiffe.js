@@ -565,7 +565,7 @@ function make_resume_button() {
   testspan.appendChild(testlink);
 }
 
-if(/\?test/.test(document.URL)) {
+if(/\?test[^#]*$/.test(document.URL)) {
   testForManual();
 } else if(/\?pageHistory&resultDate=/.test(document.URL)) {
   make_resume_button();

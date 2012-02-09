@@ -337,7 +337,7 @@ function parseRsel() {
 
   // Pick up most remaining one-argument Selenium commands.
   text = text.replace(/^ *@selenium\.([a-z_]+)  *"\/\/([^"]*)" *$/gm, "rsel| $1 |!-xpath=//$2-!|");
-  text = text.replace(/^ *@selenium\.([a-z_]+)  *"([^"]*)" *$/gm, "rsel| $1 |!-$2-!|/");
+  text = text.replace(/^ *@selenium\.([a-z_]+)  *"([^"]*)" *$/gm, "rsel| $1 |!-$2-!|");
 
   // Fix any remaining Selenium commands with underscores to have spaces instead.
   text = text.replace(/^(rsel\|[^|]*)_/gm, '$1 ');
